@@ -1,6 +1,6 @@
-@import "tailwindcss";
-@import "tw-animate-css";
-@import "shadcn/tailwind.css";
+@import 'tailwindcss';
+@import 'tw-animate-css';
+@import 'shadcn/tailwind.css';
 
 @custom-variant dark (&:is(.dark *));
 
@@ -127,4 +127,90 @@
   html {
     @apply font-sans;
   }
+}
+
+/* Improved typography for better readability */
+@layer components {
+  /* Headings */
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6 {
+    @apply font-bold;
+  }
+
+  /* Body text - make it more readable */
+  body,
+  p,
+  span,
+  div {
+    @apply font-medium;
+  }
+
+  /* Table text */
+  table,
+  th,
+  td {
+    @apply font-medium;
+  }
+
+  /* Badge improvements - better contrast */
+  .badge {
+    @apply font-bold px-3 py-1.5 text-sm;
+  }
+
+  /* Button improvements - bolder text */
+  button,
+  .btn {
+    @apply font-semibold;
+  }
+
+  /* Input text */
+  input,
+  textarea,
+  select {
+    @apply font-medium;
+  }
+
+  /* Sidebar navigation */
+  .sidebar-nav a {
+    @apply font-medium;
+  }
+
+  /* Card titles */
+  .card-title {
+    @apply font-bold;
+  }
+
+  /* Stats values */
+  .stats-value {
+    @apply font-bold text-3xl;
+  }
+}
+
+/* Status badge colors - enhanced visibility */
+.status-pending {
+  @apply bg-yellow-100 text-yellow-900 font-bold;
+}
+
+.status-confirmed {
+  @apply bg-blue-100 text-blue-900 font-bold;
+}
+
+.status-in_transit {
+  @apply bg-purple-100 text-purple-900 font-bold;
+}
+
+.status-delivered {
+  @apply bg-green-100 text-green-900 font-bold;
+}
+
+.status-picked_up {
+  @apply bg-green-100 text-green-900 font-bold;
+}
+
+.status-canceled {
+  @apply bg-red-100 text-red-900 font-bold;
 }
