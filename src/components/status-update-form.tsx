@@ -11,6 +11,20 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
+
+const statusColors: Record<string, string> = {
+  pending: 'bg-yellow-500',
+  confirmed: 'bg-blue-500',
+  in_transit: 'bg-purple-500',
+  delivered: 'bg-green-500',
+  picked_up: 'bg-green-500',
+  canceled: 'bg-red-500',
+};
+
+function getStatusColor(status: string): string {
+  return statusColors[status] || 'bg-gray-500';
+}
 
 const statusLabels: Record<string, string> = {
   pending: 'Pendiente',
@@ -57,10 +71,10 @@ export function StatusUpdateForm({ orderId, currentStatus }: StatusUpdateFormPro
   };
 
   return (
-    <form onSubmit={handleSubmit} className="flex gap-2">
-      <Select value={status} onValueChange={(value) => setStatus(value || currentStatus)}>
+    <form onSubmit={handleSubmit} className="flex gap-2 items-center">
+      <Select value={status} onValueChange={(value) => value && setStatus(value)}>
         <SelectTrigger className="w-48">
-          <SelectValue />
+          <SelectValue>{statusLabels[status]}</SelectValue>
         </SelectTrigger>
         <SelectContent>
           {Object.entries(statusLabels).map(([value, label]) => (
@@ -70,6 +84,7 @@ export function StatusUpdateForm({ orderId, currentStatus }: StatusUpdateFormPro
           ))}
         </SelectContent>
       </Select>
+      <Badge className={`${getStatusColor(status)} text-white`}>{statusLabels[status]}</Badge>
       <Button type="submit" size="sm" disabled={loading}>
         {loading ? 'Guardando...' : 'Actualizar'}
       </Button>

@@ -21,8 +21,8 @@ export async function PUT(request: NextRequest, { params }: RouteParams) {
       return NextResponse.json({ error: 'Invalid order ID' }, { status: 400 });
     }
 
-    const formData = await request.formData();
-    const status = formData.get('status') as string;
+    const body = await request.json();
+    const status = body.status as string;
 
     if (!status) {
       return NextResponse.json({ error: 'Status is required' }, { status: 400 });
