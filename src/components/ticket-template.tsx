@@ -212,6 +212,7 @@ type TicketTemplateProps = {
   createdAt: Date;
   deliveryAddress?: string | null;
   deliveryCity?: string | null;
+  companyName?: string;
 };
 
 function getStatusStyle(status: string) {
@@ -257,6 +258,7 @@ export function TicketTemplate({
   createdAt,
   deliveryAddress,
   deliveryCity,
+  companyName = 'Package Tracker',
 }: TicketTemplateProps) {
   return (
     <Document>
@@ -264,7 +266,7 @@ export function TicketTemplate({
         {/* Header */}
         <View style={styles.header}>
           <View>
-            <Text style={styles.logo}>PACKAGE TRACKER</Text>
+            <Text style={styles.logo}>{companyName.toUpperCase()}</Text>
             <Text style={styles.companyName}>Entrega Rápida y Confiable</Text>
           </View>
           <Text style={styles.ticketTitle}>TICKET</Text>

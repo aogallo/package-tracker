@@ -1,7 +1,15 @@
 import { auth, signOut } from '@/lib/auth';
 import { redirect } from 'next/navigation';
 import { Button } from '@/components/ui/button';
-import { Package, Users, ClipboardList, LogOut, LayoutDashboard, BarChart3 } from 'lucide-react';
+import {
+  Package,
+  Users,
+  ClipboardList,
+  LogOut,
+  LayoutDashboard,
+  BarChart3,
+  Settings,
+} from 'lucide-react';
 import Link from 'next/link';
 
 export default async function AdminLayout({ children }: { children: React.ReactNode }) {
@@ -41,6 +49,9 @@ export default async function AdminLayout({ children }: { children: React.ReactN
           </NavLink>
           <NavLink href="/admin/reports" icon={BarChart3}>
             Informes
+          </NavLink>
+          <NavLink href="/admin/settings" icon={Settings}>
+            Configuración
           </NavLink>
         </nav>
 

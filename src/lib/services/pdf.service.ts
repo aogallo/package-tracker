@@ -4,6 +4,7 @@ import { renderToBuffer } from '@react-pdf/renderer';
 import { TicketTemplate } from '@/components/ticket-template';
 import { generateQRCode } from './qrcode.service';
 import { getOrderById } from '@/lib/actions/orders';
+import { getCompanyName } from '@/lib/actions/settings';
 
 const BASE_URL = process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000';
 
@@ -47,6 +48,7 @@ export async function generateTicket(orderId: number): Promise<GenerateTicketRes
         createdAt: order.createdAt || new Date(),
         deliveryAddress: order.deliveryAddress,
         deliveryCity: order.deliveryCity,
+        companyName: await getCompanyName(),
       })
     );
 
