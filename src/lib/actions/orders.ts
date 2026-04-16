@@ -14,7 +14,19 @@ export type OrderFilters = {
   dateTo?: Date;
 };
 
-export async function getOrders(filters?: OrderFilters) {
+export type OrderWithClientName = {
+  id: number;
+  trackingNumber: string;
+  clientId: number | null;
+  guestName: string;
+  guestEmail: string;
+  deliveryType: 'delivery' | 'pickup';
+  status: 'pending' | 'confirmed' | 'in_transit' | 'delivered' | 'picked_up' | 'canceled';
+  createdAt: Date;
+  clientName: string | null;
+};
+
+export async function getOrders(filters?: OrderFilters): Promise<OrderWithClientName[]> {
   const conditions = [];
 
   if (filters?.status) {
@@ -40,33 +52,6 @@ export async function getOrders(filters?: OrderFilters) {
     conditions.push(lte(orders.createdAt, filters.dateTo));
   }
 
-  // If client name search, we need a join
-  if (filters?.clientName) {
-    const nameSearch = `%${filters.clientName}%`;
-    conditions.push(or(like(clients.name, nameSearch), like(orders.guestName, nameSearch)) as SQL);
-
-    const query = db
-      .select({
-        id: orders.id,
-        trackingNumber: orders.trackingNumber,
-        clientId: orders.clientId,
-        guestName: orders.guestName,
-        guestEmail: orders.guestEmail,
-        deliveryType: orders.deliveryType,
-        status: orders.status,
-        createdAt: orders.createdAt,
-        clientName: clients.name,
-      })
-      .from(orders)
-      .leftJoin(clients, eq(orders.clientId, clients.id));
-
-    if (conditions.length > 0) {
-      return query.where(and(...conditions)).orderBy((cols) => [cols.createdAt]);
-    }
-    return query.orderBy((cols) => [cols.createdAt]);
-  }
-
-  // Simple query without join
   const query = db
     .select({
       id: orders.id,
@@ -77,8 +62,15 @@ export async function getOrders(filters?: OrderFilters) {
       deliveryType: orders.deliveryType,
       status: orders.status,
       createdAt: orders.createdAt,
+      clientName: clients.name,
     })
-    .from(orders);
+    .from(orders)
+    .leftJoin(clients, eq(orders.clientId, clients.id));
+
+  if (filters?.clientName) {
+    const nameSearch = `%${filters.clientName}%`;
+    conditions.push(or(like(clients.name, nameSearch), like(orders.guestName, nameSearch)) as SQL);
+  }
 
   if (conditions.length > 0) {
     return query.where(and(...conditions)).orderBy((cols) => [cols.createdAt]);

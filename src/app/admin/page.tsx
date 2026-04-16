@@ -1,12 +1,11 @@
-'use client';
-
-import { useEffect, useState } from 'react';
 import { Package, Clock, Truck, CheckCircle, XCircle } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import Link from 'next/link';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
+import { getOrders } from '@/lib/actions/orders';
+import { getStats } from '@/lib/actions/stats';
 
 const statusLabels: Record<string, string> = {
   pending: 'Pendiente',
@@ -18,12 +17,12 @@ const statusLabels: Record<string, string> = {
 };
 
 const statusColors: Record<string, { bg: string; text: string }> = {
-  pending: { bg: 'bg-yellow-100', text: 'text-yellow-800' },
-  confirmed: { bg: 'bg-blue-100', text: 'text-blue-800' },
-  in_transit: { bg: 'bg-purple-100', text: 'text-purple-800' },
-  delivered: { bg: 'bg-green-100', text: 'text-green-800' },
-  picked_up: { bg: 'bg-green-100', text: 'text-green-800' },
-  canceled: { bg: 'bg-red-100', text: 'text-red-800' },
+  pending: { bg: 'bg-yellow-100', text: 'text-yellow-900' },
+  confirmed: { bg: 'bg-blue-100', text: 'text-blue-900' },
+  in_transit: { bg: 'bg-purple-100', text: 'text-purple-900' },
+  delivered: { bg: 'bg-green-100', text: 'text-green-900' },
+  picked_up: { bg: 'bg-green-100', text: 'text-green-900' },
+  canceled: { bg: 'bg-red-100', text: 'text-red-900' },
 };
 
 const deliveryTypeLabels: Record<string, string> = {
@@ -31,93 +30,18 @@ const deliveryTypeLabels: Record<string, string> = {
   pickup: 'Recoger',
 };
 
-interface OrderStats {
-  total: number;
-  pending: number;
-  inTransit: number;
-  delivered: number;
-  canceled: number;
-}
+export default async function AdminDashboard() {
+  // Fetch data directly from server actions
+  const [stats, orders] = await Promise.all([getStats(), getOrders({})]);
 
-interface OrderItem {
-  id: number;
-  name: string;
-  quantity: number;
-  description: string | null;
-  url: string | null;
-}
-
-interface Order {
-  id: number;
-  trackingNumber: string;
-  status: string;
-  deliveryType: string;
-  guestName: string | null;
-  guestEmail: string | null;
-  guestPhone: string | null;
-  clientId: number | null;
-  deliveryAddress: string | null;
-  deliveryCity: string | null;
-  deliveryZip: string | null;
-  notes: string | null;
-  createdAt: Date | null;
-  updatedAt: Date | null;
-  items?: OrderItem[];
-  client?: {
-    id: number;
-    name: string;
-  } | null;
-}
-
-export default function AdminDashboard() {
-  const [stats, setStats] = useState<OrderStats>({
-    total: 0,
-    pending: 0,
-    inTransit: 0,
-    delivered: 0,
-    canceled: 0,
-  });
-  const [recentOrders, setRecentOrders] = useState<Order[]>([]);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    async function fetchData() {
-      try {
-        // Fetch all orders and calculate stats
-        const res = await fetch('/api/orders/list');
-        if (res.ok) {
-          const data = await res.json();
-          const orders: Order[] = data.orders || [];
-
-          // Calculate stats
-          setStats({
-            total: orders.length,
-            pending: orders.filter((o) => o.status === 'pending').length,
-            inTransit: orders.filter((o) => o.status === 'in_transit').length,
-            delivered: orders.filter((o) => o.status === 'delivered').length,
-            canceled: orders.filter((o) => o.status === 'canceled').length,
-          });
-
-          // Get recent orders (sorted by createdAt desc, limit 5)
-          const sorted = [...orders]
-            .sort((a, b) => {
-              const dateA = a.createdAt ? new Date(a.createdAt).getTime() : 0;
-              const dateB = b.createdAt ? new Date(b.createdAt).getTime() : 0;
-              return dateB - dateA;
-            })
-            .slice(0, 5);
-
-          setRecentOrders(sorted);
-        }
-      } catch (error) {
-        console.error('Error fetching dashboard data:', error);
-      } finally {
-        setLoading(false);
-      }
-    }
-
-    fetchData();
-  }, []);
+  // Get recent orders (sorted by createdAt desc, limit 5)
+  const recentOrders = [...orders]
+    .sort((a, b) => {
+      const dateA = a.createdAt ? new Date(a.createdAt).getTime() : 0;
+      const dateB = b.createdAt ? new Date(b.createdAt).getTime() : 0;
+      return dateB - dateA;
+    })
+    .slice(0, 5);
 
   return (
     <div className="p-6 lg:p-8">
@@ -184,11 +108,7 @@ export default function AdminDashboard() {
           </Link>
         </CardHeader>
         <CardContent>
-          {loading ? (
-            <p className="text-center py-8 text-muted-foreground font-medium">
-              Cargando órdenes...
-            </p>
-          ) : recentOrders.length === 0 ? (
+          {recentOrders.length === 0 ? (
             <p className="text-center py-8 text-muted-foreground font-medium">
               No hay órdenes recientes.{' '}
               <Link href="/admin/orders/new" className="text-blue-600 hover:underline">
@@ -208,7 +128,7 @@ export default function AdminDashboard() {
                     </div>
                     <div>
                       <p className="font-semibold text-sm">
-                        {order.client?.name || order.guestName || 'Cliente'}
+                        {order.clientName || order.guestName || 'Cliente'}
                       </p>
                       <p className="text-xs text-muted-foreground font-medium">
                         {deliveryTypeLabels[order.deliveryType] || order.deliveryType} •{' '}
