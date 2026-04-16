@@ -19,3 +19,18 @@ export async function setSetting(key: string, value: string): Promise<void> {
 export async function getCompanyName(): Promise<string> {
   return (await getSetting('company_name')) || 'Package Tracker';
 }
+
+// Settings CRUD
+export interface SettingsData {
+  companyName: string;
+}
+
+export async function getSettings(): Promise<SettingsData> {
+  const companyName = await getCompanyName();
+  return { companyName };
+}
+
+export async function updateSettings(data: SettingsData): Promise<{ success: boolean }> {
+  await setSetting('company_name', data.companyName.trim());
+  return { success: true };
+}

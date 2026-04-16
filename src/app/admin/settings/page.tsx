@@ -1,55 +1,11 @@
-'use client';
-
-import { useEffect, useState } from 'react';
+import { getSettings } from '@/lib/actions/settings';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Input } from '@/components/ui/input';
-import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
-import { toast } from 'sonner';
 import { Settings } from 'lucide-react';
+import SettingsForm from './settings-form';
 
-export default function SettingsPage() {
-  const [companyName, setCompanyName] = useState('');
-  const [loading, setLoading] = useState(true);
-  const [saving, setSaving] = useState(false);
-
-  useEffect(() => {
-    async function loadSettings() {
-      try {
-        const res = await fetch('/api/settings');
-        if (res.ok) {
-          const data = await res.json();
-          setCompanyName(data.companyName || '');
-        }
-      } catch (error) {
-        console.error('Error loading settings:', error);
-      } finally {
-        setLoading(false);
-      }
-    }
-
-    loadSettings();
-  }, []);
-
-  const handleSave = async () => {
-    setSaving(true);
-    try {
-      const res = await fetch('/api/settings', {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ companyName }),
-      });
-      if (res.ok) {
-        toast.success('Configuración guardada');
-      } else {
-        toast.error('Error al guardar');
-      }
-    } catch {
-      toast.error('Error al guardar');
-    } finally {
-      setSaving(false);
-    }
-  };
+export default async function SettingsPage() {
+  const settings = await getSettings();
 
   return (
     <div className="p-6 lg:p-8 max-w-2xl">
@@ -72,20 +28,11 @@ export default function SettingsPage() {
             <Label htmlFor="companyName" className="font-semibold">
               Nombre de la Empresa
             </Label>
-            <Input
-              id="companyName"
-              value={companyName}
-              onChange={(e) => setCompanyName(e.target.value)}
-              placeholder="Mi Empresa de Paquetes"
-              className="mt-1"
-            />
+            <SettingsForm initialCompanyName={settings.companyName} />
             <p className="text-sm text-muted-foreground mt-1">
               Este nombre aparecerá en los tickets PDF generados.
             </p>
           </div>
-          <Button onClick={handleSave} disabled={saving || loading} className="font-semibold">
-            {saving ? 'Guardando...' : 'Guardar Configuración'}
-          </Button>
         </CardContent>
       </Card>
     </div>
