@@ -8,8 +8,11 @@ import { Button } from '@/components/ui/button';
 import { Package } from 'lucide-react';
 import { useFormStatus } from 'react-dom';
 import { useState } from 'react';
+import { useTranslations } from 'next-intl';
 
 export default function LoginPage() {
+  const t = useTranslations('login');
+
   return (
     <div className="min-h-screen flex items-center justify-center bg-muted/50 px-4">
       <Card className="w-full max-w-md">
@@ -19,10 +22,8 @@ export default function LoginPage() {
               <Package className="h-6 w-6 text-primary-foreground" />
             </div>
           </div>
-          <CardTitle className="text-2xl text-center font-bold">Iniciar Sesión</CardTitle>
-          <CardDescription className="text-center">
-            Ingresa tus credenciales para acceder al panel
-          </CardDescription>
+          <CardTitle className="text-2xl text-center font-bold">{t('title')}</CardTitle>
+          <CardDescription className="text-center">{t('description')}</CardDescription>
         </CardHeader>
         <CardContent>
           <LoginForm />
@@ -35,6 +36,7 @@ export default function LoginPage() {
 function LoginForm() {
   const [error, setError] = useState<string | null>(null);
   const { pending } = useFormStatus();
+  const t = useTranslations('login');
 
   async function handleSubmit(formData: FormData) {
     setError(null);
@@ -44,7 +46,7 @@ function LoginForm() {
       if (err instanceof Error) {
         setError(err.message);
       } else {
-        setError('Ocurrió un error inesperado');
+        setError(t('unexpectedError'));
       }
     }
   }
@@ -52,23 +54,23 @@ function LoginForm() {
   return (
     <form action={handleSubmit} className="space-y-4">
       <div className="space-y-2">
-        <Label htmlFor="email">Correo Electrónico</Label>
+        <Label htmlFor="email">{t('emailLabel')}</Label>
         <Input
           id="email"
           name="email"
           type="email"
-          placeholder="admin@tracker.com"
+          placeholder={t('emailPlaceholder')}
           required
           autoComplete="email"
         />
       </div>
       <div className="space-y-2">
-        <Label htmlFor="password">Contraseña</Label>
+        <Label htmlFor="password">{t('passwordLabel')}</Label>
         <Input
           id="password"
           name="password"
           type="password"
-          placeholder="••••••••"
+          placeholder={t('passwordPlaceholder')}
           required
           autoComplete="current-password"
         />
@@ -81,7 +83,7 @@ function LoginForm() {
       )}
 
       <Button type="submit" className="w-full" disabled={pending}>
-        {pending ? 'Iniciando sesión...' : 'Iniciar Sesión'}
+        {pending ? t('submittingButton') : t('submitButton')}
       </Button>
     </form>
   );

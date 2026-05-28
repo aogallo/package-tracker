@@ -12,7 +12,7 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import { Package, Truck, Clock, CheckCircle, AlertCircle, ArrowLeft } from 'lucide-react';
-import { format } from 'date-fns';
+import { getTranslations, getFormatter } from 'next-intl/server';
 import Link from 'next/link';
 
 interface TrackPageProps {
@@ -21,12 +21,13 @@ interface TrackPageProps {
 
 export async function generateMetadata({ params }: TrackPageProps) {
   const { trackingNumber } = await params;
+  const t = await getTranslations('track');
   return {
-    title: `Rastrear Paquete ${trackingNumber} | Tracker`,
-    description: 'Rastrea el estado de entrega de tu paquete',
+    title: t('resultTitle', { trackingNumber }),
+    description: t('resultMetaDescription'),
     openGraph: {
-      title: `Rastrear Paquete ${trackingNumber} | Tracker`,
-      description: 'Rastrea el estado de entrega de tu paquete',
+      title: t('resultTitle', { trackingNumber }),
+      description: t('resultMetaDescription'),
       type: 'website',
     },
   };
@@ -34,6 +35,8 @@ export async function generateMetadata({ params }: TrackPageProps) {
 
 export default async function TrackPage({ params }: TrackPageProps) {
   const { trackingNumber } = await params;
+  const t = await getTranslations('track');
+  const formatter = await getFormatter();
 
   const order = await trackOrder(trackingNumber);
 
@@ -46,19 +49,19 @@ export default async function TrackPage({ params }: TrackPageProps) {
   // Get timeline events based on status
   const timelineEvents = [
     {
-      label: 'Orden Creada',
+      label: t('eventOrderCreated'),
       date: order.createdAt,
       completed: true,
       icon: Package,
     },
     {
-      label: 'Confirmado',
+      label: t('eventConfirmed'),
       date: order.status !== 'pending' ? order.updatedAt : null,
       completed: ['confirmed', 'in_transit', 'delivered', 'picked_up'].includes(order.status),
       icon: CheckCircle,
     },
     {
-      label: order.deliveryType === 'delivery' ? 'En Camino' : 'Listo para Recoger',
+      label: order.deliveryType === 'delivery' ? t('eventInTransit') : t('eventReadyPickup'),
       date: ['in_transit', 'delivered', 'picked_up'].includes(order.status)
         ? order.updatedAt
         : null,
@@ -66,7 +69,7 @@ export default async function TrackPage({ params }: TrackPageProps) {
       icon: Truck,
     },
     {
-      label: order.deliveryType === 'delivery' ? 'Entregado' : 'Recogido',
+      label: order.deliveryType === 'delivery' ? t('eventDelivered') : t('eventPickedUp'),
       date: ['delivered', 'picked_up'].includes(order.status) ? order.deliveredAt : null,
       completed: ['delivered', 'picked_up'].includes(order.status),
       icon: CheckCircle,
@@ -82,7 +85,7 @@ export default async function TrackPage({ params }: TrackPageProps) {
           className="inline-flex items-center gap-2 text-muted-foreground hover:text-foreground mb-6 transition-colors"
         >
           <ArrowLeft className="w-4 h-4" />
-          Volver al rastreo
+          {t('backLink')}
         </Link>
 
         {/* Header Card */}
@@ -90,9 +93,9 @@ export default async function TrackPage({ params }: TrackPageProps) {
           <CardHeader>
             <div className="flex items-center justify-between">
               <div>
-                <CardTitle className="text-2xl">Rastrea Tu Paquete</CardTitle>
+                <CardTitle className="text-2xl">{t('trackingCardTitle')}</CardTitle>
                 <p className="text-muted-foreground mt-1">
-                  Número de Seguimiento: {order.trackingNumber}
+                  {t('trackingNumber', { trackingNumber: order.trackingNumber })}
                 </p>
               </div>
               <Badge className={`${statusInfo.color} text-sm px-3 py-1`}>{statusInfo.label}</Badge>
@@ -108,7 +111,7 @@ export default async function TrackPage({ params }: TrackPageProps) {
           <CardHeader>
             <CardTitle className="text-lg flex items-center gap-2">
               <Clock className="w-5 h-5" />
-              Línea de Tiempo de Entrega
+              {t('timelineTitle')}
             </CardTitle>
           </CardHeader>
           <CardContent>
@@ -130,11 +133,14 @@ export default async function TrackPage({ params }: TrackPageProps) {
                     </p>
                     {event.date && (
                       <p className="text-sm text-muted-foreground">
-                        {format(new Date(event.date), "dd 'de' MMMM 'de' yyyy, HH:mm")}
+                        {formatter.dateTime(new Date(event.date), {
+                          dateStyle: 'long',
+                          timeStyle: 'short',
+                        })}
                       </p>
                     )}
                     {!event.date && order.status === 'canceled' && (
-                      <p className="text-sm text-red-500">Esta orden fue cancelada</p>
+                      <p className="text-sm text-red-500">{t('eventCanceledNotice')}</p>
                     )}
                   </div>
                 </div>
@@ -148,37 +154,43 @@ export default async function TrackPage({ params }: TrackPageProps) {
           <CardHeader>
             <CardTitle className="text-lg flex items-center gap-2">
               <Package className="w-5 h-5" />
-              Detalles de la Orden
+              {t('detailsTitle')}
             </CardTitle>
           </CardHeader>
           <CardContent>
             <div className="grid grid-cols-2 gap-4 mb-6">
               <div>
-                <Label className="text-muted-foreground text-sm font-medium">Tipo de Entrega</Label>
+                <Label className="text-muted-foreground text-sm font-medium">
+                  {t('deliveryTypeLabel')}
+                </Label>
                 <p className="font-medium">
-                  {order.deliveryType === 'delivery' ? 'Entrega a Domicilio' : 'Recoger en Tienda'}
+                  {order.deliveryType === 'delivery'
+                    ? t('deliveryTypeHome')
+                    : t('deliveryTypeStore')}
                 </p>
               </div>
               <div>
-                <Label className="text-muted-foreground text-sm font-medium">Fecha de Orden</Label>
+                <Label className="text-muted-foreground text-sm font-medium">
+                  {t('orderDateLabel')}
+                </Label>
                 <p className="font-medium">
                   {order.createdAt
-                    ? format(new Date(order.createdAt), "dd 'de' MMMM 'de' yyyy")
-                    : 'N/A'}
+                    ? formatter.dateTime(new Date(order.createdAt), { dateStyle: 'long' })
+                    : t('na')}
                 </p>
               </div>
             </div>
 
             <Label className="text-muted-foreground text-sm font-medium mb-2 block">
-              Artículos
+              {t('itemsLabel')}
             </Label>
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>Artículo</TableHead>
-                  <TableHead className="text-center">Cant.</TableHead>
-                  <TableHead>Descripción</TableHead>
-                  <TableHead>URL</TableHead>
+                  <TableHead>{t('tableItem')}</TableHead>
+                  <TableHead className="text-center">{t('tableQty')}</TableHead>
+                  <TableHead>{t('tableDescription')}</TableHead>
+                  <TableHead>{t('tableUrl')}</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -196,7 +208,7 @@ export default async function TrackPage({ params }: TrackPageProps) {
                             rel="noopener noreferrer"
                             className="text-blue-600 hover:underline"
                           >
-                            Ver
+                            {t('viewLink')}
                           </a>
                         ) : (
                           '-'
@@ -207,7 +219,7 @@ export default async function TrackPage({ params }: TrackPageProps) {
                 ) : (
                   <TableRow>
                     <TableCell colSpan={4} className="text-center text-muted-foreground">
-                      Sin artículos
+                      {t('noItems')}
                     </TableCell>
                   </TableRow>
                 )}
@@ -222,11 +234,8 @@ export default async function TrackPage({ params }: TrackPageProps) {
             <div className="flex items-start gap-3">
               <AlertCircle className="w-5 h-5 text-blue-600 mt-0.5" />
               <div>
-                <p className="font-medium text-blue-900">¿Necesitas Ayuda?</p>
-                <p className="text-sm text-blue-700 mt-1">
-                  Si tienes preguntas sobre tu orden, por favor contacta a nuestro equipo de soporte
-                  con tu número de seguimiento.
-                </p>
+                <p className="font-medium text-blue-900">{t('helpTitle')}</p>
+                <p className="text-sm text-blue-700 mt-1">{t('helpCardBody')}</p>
               </div>
             </div>
           </CardContent>
