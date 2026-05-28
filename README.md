@@ -1,4 +1,4 @@
-# Package Tracker
+# Package Tracker [![CI](https://github.com/aogallo/package-tracker/actions/workflows/ci.yml/badge.svg)](https://github.com/aogallo/package-tracker/actions/workflows/ci.yml)
 
 Sistema de rastreo de paquetes para empresas en Guatemala. Panel de administración con gestión de órdenes, clientes, informes y seguimiento público sin autenticación.
 
