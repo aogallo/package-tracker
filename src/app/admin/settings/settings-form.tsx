@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
+import { useTranslations } from 'next-intl';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
@@ -12,6 +13,7 @@ interface SettingsFormProps {
 }
 
 export default function SettingsForm({ initialCompanyName }: SettingsFormProps) {
+  const t = useTranslations('admin.settings');
   const [companyName, setCompanyName] = useState(initialCompanyName);
   const [saving, setSaving] = useState(false);
   const router = useRouter();
@@ -21,13 +23,13 @@ export default function SettingsForm({ initialCompanyName }: SettingsFormProps) 
     try {
       const result = await updateSettings({ companyName });
       if (result.success) {
-        toast.success('Configuración guardada');
+        toast.success(t('toastSaved'));
         router.refresh(); // Refresh server components
       } else {
-        toast.error('Error al guardar');
+        toast.error(t('toastError'));
       }
     } catch {
-      toast.error('Error al guardar');
+      toast.error(t('toastError'));
     } finally {
       setSaving(false);
     }
@@ -39,11 +41,11 @@ export default function SettingsForm({ initialCompanyName }: SettingsFormProps) 
         id="companyName"
         value={companyName}
         onChange={(e) => setCompanyName(e.target.value)}
-        placeholder="Mi Empresa de Paquetes"
+        placeholder={t('companyNamePlaceholder')}
         className="mt-1"
       />
       <Button onClick={handleSave} disabled={saving} className="font-semibold mt-4">
-        {saving ? 'Guardando...' : 'Guardar Configuración'}
+        {saving ? t('saving') : t('saveButton')}
       </Button>
     </>
   );
