@@ -2,19 +2,33 @@ import { Package, Clock, Truck, CheckCircle, XCircle } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import Link from 'next/link';
+import { getTranslations, getLocale } from 'next-intl/server';
 import { format } from 'date-fns';
-import { es } from 'date-fns/locale';
+import { es, enUS } from 'date-fns/locale';
 import { getOrders } from '@/lib/actions/orders';
 import { getStats } from '@/lib/actions/stats';
-
-const statusLabels: Record<string, string> = {
-  pending: 'Pendiente',
-  confirmed: 'Confirmado',
-  in_transit: 'En Camino',
-  delivered: 'Entregado',
-  picked_up: 'Recogido',
-  canceled: 'Cancelado',
+// Inline label maps — replaced by import from @/lib/i18n/labels when PR #5 merges
+const statusLabelMap: Record<string, { es: string; en: string }> = {
+  pending: { es: 'Pendiente', en: 'Pending' },
+  confirmed: { es: 'Confirmado', en: 'Confirmed' },
+  in_transit: { es: 'En Camino', en: 'In Transit' },
+  delivered: { es: 'Entregado', en: 'Delivered' },
+  picked_up: { es: 'Recogido', en: 'Picked Up' },
+  canceled: { es: 'Cancelado', en: 'Canceled' },
 };
+
+const deliveryTypeLabelMap: Record<string, { es: string; en: string }> = {
+  delivery: { es: 'Entrega', en: 'Delivery' },
+  pickup: { es: 'Recoger', en: 'Pickup' },
+};
+
+function getStatusLabel(locale: string, status: string): string {
+  return statusLabelMap[status]?.[locale as 'es' | 'en'] || status;
+}
+
+function getDeliveryTypeLabel(locale: string, type: string): string {
+  return deliveryTypeLabelMap[type]?.[locale as 'es' | 'en'] || type.toUpperCase();
+}
 
 const statusColors: Record<string, { bg: string; text: string }> = {
   pending: { bg: 'bg-yellow-100', text: 'text-yellow-900' },
@@ -25,12 +39,11 @@ const statusColors: Record<string, { bg: string; text: string }> = {
   canceled: { bg: 'bg-red-100', text: 'text-red-900' },
 };
 
-const deliveryTypeLabels: Record<string, string> = {
-  delivery: 'Entrega',
-  pickup: 'Recoger',
-};
-
 export default async function AdminDashboard() {
+  const t = await getTranslations('admin.dashboard');
+  const locale = await getLocale();
+  const dateLocale = locale === 'en' ? enUS : es;
+
   // Fetch data directly from server actions
   const [stats, orders] = await Promise.all([getStats(), getOrders({})]);
 
@@ -47,46 +60,44 @@ export default async function AdminDashboard() {
     <div className="p-6 lg:p-8">
       {/* Header */}
       <div className="mb-8">
-        <h1 className="text-3xl font-bold tracking-tight">Panel de Administración</h1>
-        <p className="text-muted-foreground mt-1 font-medium">
-          Resumen de tus órdenes y actividad reciente
-        </p>
+        <h1 className="text-3xl font-bold tracking-tight">{t('title')}</h1>
+        <p className="text-muted-foreground mt-1 font-medium">{t('subtitle')}</p>
       </div>
 
       {/* Stats Grid */}
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-5 mb-8">
         <StatsCard
-          title="Total"
+          title={t('statTotal')}
           value={stats.total}
-          description="Órdenes totales"
+          description={t('statTotalDesc')}
           icon={Package}
           color="bg-slate-100 text-slate-700"
         />
         <StatsCard
-          title="Pendientes"
+          title={t('statPending')}
           value={stats.pending}
-          description="Esperando confirmar"
+          description={t('statPendingDesc')}
           icon={Clock}
           color="bg-yellow-100 text-yellow-700"
         />
         <StatsCard
-          title="En Camino"
+          title={t('statInTransit')}
           value={stats.inTransit}
-          description="Siendo entregadas"
+          description={t('statInTransitDesc')}
           icon={Truck}
           color="bg-purple-100 text-purple-700"
         />
         <StatsCard
-          title="Entregadas"
+          title={t('statDelivered')}
           value={stats.delivered}
-          description="Completadas"
+          description={t('statDeliveredDesc')}
           icon={CheckCircle}
           color="bg-green-100 text-green-700"
         />
         <StatsCard
-          title="Canceladas"
+          title={t('statCanceled')}
           value={stats.canceled}
-          description="Canceladas"
+          description={t('statCanceledDesc')}
           icon={XCircle}
           color="bg-red-100 text-red-700"
         />
@@ -96,23 +107,23 @@ export default async function AdminDashboard() {
       <Card>
         <CardHeader className="flex flex-row items-center justify-between">
           <div>
-            <CardTitle className="text-xl font-bold">Órdenes Recientes</CardTitle>
+            <CardTitle className="text-xl font-bold">{t('recentOrders')}</CardTitle>
             <p className="text-sm text-muted-foreground font-medium mt-1">
-              Las últimas 5 órdenes creadas
+              {t('recentOrdersDesc')}
             </p>
           </div>
           <Link href="/admin/orders">
             <Button variant="outline" size="sm" className="font-semibold">
-              Ver Todas
+              {t('viewAll')}
             </Button>
           </Link>
         </CardHeader>
         <CardContent>
           {recentOrders.length === 0 ? (
             <p className="text-center py-8 text-muted-foreground font-medium">
-              No hay órdenes recientes.{' '}
+              {t('noOrders')}{' '}
               <Link href="/admin/orders/new" className="text-blue-600 hover:underline">
-                Crear primera orden
+                {t('createFirst')}
               </Link>
             </p>
           ) : (
@@ -128,13 +139,15 @@ export default async function AdminDashboard() {
                     </div>
                     <div>
                       <p className="font-semibold text-sm">
-                        {order.clientName || order.guestName || 'Cliente'}
+                        {order.clientName || order.guestName || t('clientLabel')}
                       </p>
                       <p className="text-xs text-muted-foreground font-medium">
-                        {deliveryTypeLabels[order.deliveryType] || order.deliveryType} •{' '}
+                        {getDeliveryTypeLabel(locale, order.deliveryType)} •{' '}
                         {order.createdAt
-                          ? format(new Date(order.createdAt), 'dd MMM yyyy, HH:mm', { locale: es })
-                          : 'Sin fecha'}
+                          ? format(new Date(order.createdAt), 'dd MMM yyyy, HH:mm', {
+                              locale: dateLocale,
+                            })
+                          : t('noDate')}
                       </p>
                     </div>
                   </div>
@@ -142,11 +155,11 @@ export default async function AdminDashboard() {
                     <span
                       className={`px-3 py-1.5 rounded-full text-sm font-bold ${statusColors[order.status]?.bg} ${statusColors[order.status]?.text}`}
                     >
-                      {statusLabels[order.status] || order.status}
+                      {getStatusLabel(locale, order.status)}
                     </span>
                     <Link href={`/admin/orders/${order.id}`}>
                       <Button variant="ghost" size="sm" className="font-semibold">
-                        Ver
+                        {t('viewOrder')}
                       </Button>
                     </Link>
                   </div>
