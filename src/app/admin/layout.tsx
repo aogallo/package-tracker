@@ -12,6 +12,7 @@ import {
   Settings,
 } from 'lucide-react';
 import Link from 'next/link';
+import { LocaleSwitcher } from '@/components/locale-switcher';
 
 export default async function AdminLayout({ children }: { children: React.ReactNode }) {
   const t = await getTranslations('admin.layout');
@@ -56,6 +57,11 @@ export default async function AdminLayout({ children }: { children: React.ReactN
             {t('navSettings')}
           </NavLink>
         </nav>
+
+        {/* Locale Switcher */}
+        <div className="p-4 border-t flex justify-center">
+          <LocaleSwitcher />
+        </div>
 
         {/* Logout */}
         <div className="p-4 border-t">
