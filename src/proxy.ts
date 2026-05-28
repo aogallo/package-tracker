@@ -1,24 +1,17 @@
-import createIntlMiddleware from 'next-intl/middleware';
 import { auth } from '@/lib/auth';
-import { routing } from '@/i18n/routing';
 import { NextResponse } from 'next/server';
 
-const intlMiddleware = createIntlMiddleware(routing);
-
 export default auth((req) => {
-  // 1. Run intl middleware first to detect locale from cookie
-  // With localePrefix: 'never', this sets locale headers without URL rewrites
-  const intlResponse = intlMiddleware(req);
-
-  // 2. Apply auth route protection
-  const isLoggedIn = !!req.auth;
+  // Auth.js v5 sets req.auth to {} even without session.
+  // Check for actual user object to determine auth state.
+  const isLoggedIn = !!req.auth && 'user' in (req.auth as object);
   const isAdminRoute = req.nextUrl.pathname.startsWith('/admin');
   const isLoginPage = req.nextUrl.pathname === '/login';
   const isApiRoute = req.nextUrl.pathname.startsWith('/api');
 
   // Allow API routes without auth (webhooks, etc.)
   if (isApiRoute) {
-    return intlResponse;
+    return NextResponse.next();
   }
 
   // Redirect unauthenticated users to login
@@ -31,10 +24,9 @@ export default auth((req) => {
     return NextResponse.redirect(new URL('/admin', req.url));
   }
 
-  return intlResponse;
+  return NextResponse.next();
 });
 
 export const config = {
-  // Run on all routes except API internals, Next.js internals, and static files
-  matcher: ['/((?!api|_next|_vercel|.*\\..*).*)'],
+  matcher: ['/admin/:path*', '/login'],
 };
