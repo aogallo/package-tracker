@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useCallback } from 'react';
+import { useTranslations, useLocale } from 'next-intl';
 import { getReportMetrics, getReportOrders, exportCSV } from '@/lib/actions/reports';
 import { ReportFilters, FilterState } from '@/components/report-filters';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -16,6 +17,7 @@ import {
 } from '@/components/ui/table';
 import { Download, Package, Truck, CheckCircle, XCircle, Clock, RotateCcw } from 'lucide-react';
 import { format } from 'date-fns';
+import { getStatusLabel, getDeliveryTypeLabel } from '@/lib/i18n/labels';
 
 type ReportMetrics = {
   total: number;
@@ -53,20 +55,6 @@ const statusColors: Record<string, string> = {
   canceled: 'bg-red-100 text-red-800',
 };
 
-const statusLabels: Record<string, string> = {
-  pending: 'Pendiente',
-  confirmed: 'Confirmado',
-  in_transit: 'En Camino',
-  delivered: 'Entregado',
-  picked_up: 'Recogido',
-  canceled: 'Cancelado',
-};
-
-const deliveryTypeLabels: Record<string, string> = {
-  delivery: 'Entrega',
-  pickup: 'Recoger',
-};
-
 interface ReportsClientProps {
   initialMetrics: ReportMetrics;
   initialOrders: ReportOrder[];
@@ -78,6 +66,8 @@ export default function ReportsClient({
   initialOrders,
   clients,
 }: ReportsClientProps) {
+  const t = useTranslations('admin.reports');
+  const locale = useLocale();
   const [metrics, setMetrics] = useState<ReportMetrics>(initialMetrics);
   const [orders, setOrders] = useState<ReportOrder[]>(initialOrders);
   const [filters, setFilters] = useState<FilterState>({
@@ -88,39 +78,42 @@ export default function ReportsClient({
   });
   const [isLoading, setIsLoading] = useState(false);
 
-  const handleApplyFilters = useCallback(async (newFilters: FilterState) => {
-    setIsLoading(true);
-    try {
-      // Build filters object
-      const reportFilters: Record<string, unknown> = {};
-      if (newFilters.dateFrom) {
-        reportFilters.dateFrom = new Date(newFilters.dateFrom);
-      }
-      if (newFilters.dateTo) {
-        reportFilters.dateTo = new Date(newFilters.dateTo);
-      }
-      if (newFilters.clientId && newFilters.clientId !== 'all') {
-        reportFilters.clientId = parseInt(newFilters.clientId, 10);
-      }
-      if (newFilters.status && newFilters.status !== 'all') {
-        reportFilters.status = newFilters.status;
-      }
+  const handleApplyFilters = useCallback(
+    async (newFilters: FilterState) => {
+      setIsLoading(true);
+      try {
+        // Build filters object
+        const reportFilters: Record<string, unknown> = {};
+        if (newFilters.dateFrom) {
+          reportFilters.dateFrom = new Date(newFilters.dateFrom);
+        }
+        if (newFilters.dateTo) {
+          reportFilters.dateTo = new Date(newFilters.dateTo);
+        }
+        if (newFilters.clientId && newFilters.clientId !== 'all') {
+          reportFilters.clientId = parseInt(newFilters.clientId, 10);
+        }
+        if (newFilters.status && newFilters.status !== 'all') {
+          reportFilters.status = newFilters.status;
+        }
 
-      // Fetch new data
-      const [newMetrics, newOrders] = await Promise.all([
-        getReportMetrics(reportFilters as Parameters<typeof getReportMetrics>[0]),
-        getReportOrders(reportFilters as Parameters<typeof getReportOrders>[0]),
-      ]);
+        // Fetch new data
+        const [newMetrics, newOrders] = await Promise.all([
+          getReportMetrics(reportFilters as Parameters<typeof getReportMetrics>[0]),
+          getReportOrders(reportFilters as Parameters<typeof getReportOrders>[0]),
+        ]);
 
-      setMetrics(newMetrics);
-      setOrders(newOrders);
-      setFilters(newFilters);
-    } catch (error) {
-      console.error('Error al obtener informes:', error);
-    } finally {
-      setIsLoading(false);
-    }
-  }, []);
+        setMetrics(newMetrics);
+        setOrders(newOrders);
+        setFilters(newFilters);
+      } catch (error) {
+        console.error(t('errorFetch'), error);
+      } finally {
+        setIsLoading(false);
+      }
+    },
+    [t]
+  );
 
   const handleExportCSV = useCallback(async () => {
     setIsLoading(true);
@@ -153,23 +146,23 @@ export default function ReportsClient({
       link.click();
       document.body.removeChild(link);
     } catch (error) {
-      console.error('Error al exportar CSV:', error);
+      console.error(t('errorExport'), error);
     } finally {
       setIsLoading(false);
     }
-  }, [filters]);
+  }, [filters, t]);
 
   return (
     <div className="container mx-auto py-10 max-w-7xl">
       {/* Header */}
       <div className="flex items-center justify-between mb-6">
         <div>
-          <h1 className="text-3xl font-bold">Informes</h1>
-          <p className="text-muted-foreground">Ver estadísticas de órdenes y exportar datos</p>
+          <h1 className="text-3xl font-bold">{t('title')}</h1>
+          <p className="text-muted-foreground">{t('subtitle')}</p>
         </div>
         <Button onClick={handleExportCSV} disabled={isLoading} className="gap-2">
           <Download className="w-4 h-4" />
-          Exportar CSV
+          {t('exportCSV')}
         </Button>
       </div>
 
@@ -183,37 +176,37 @@ export default function ReportsClient({
       {/* Metrics Cards */}
       <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4 mb-6">
         <MetricCard
-          title="Total"
+          title={t('metricTotal')}
           value={metrics.total}
           icon={Package}
           color="bg-slate-100 text-slate-700"
         />
         <MetricCard
-          title="Pendientes"
+          title={t('metricPending')}
           value={metrics.pending}
           icon={Clock}
           color="bg-yellow-100 text-yellow-700"
         />
         <MetricCard
-          title="Confirmados"
+          title={t('metricConfirmed')}
           value={metrics.confirmed}
           icon={RotateCcw}
           color="bg-blue-100 text-blue-700"
         />
         <MetricCard
-          title="En Camino"
+          title={t('metricInTransit')}
           value={metrics.in_transit}
           icon={Truck}
           color="bg-purple-100 text-purple-700"
         />
         <MetricCard
-          title="Entregados"
+          title={t('metricDelivered')}
           value={metrics.delivered + metrics.picked_up}
           icon={CheckCircle}
           color="bg-green-100 text-green-700"
         />
         <MetricCard
-          title="Cancelados"
+          title={t('metricCanceled')}
           value={metrics.canceled}
           icon={XCircle}
           color="bg-red-100 text-red-700"
@@ -223,27 +216,27 @@ export default function ReportsClient({
       {/* Orders Table */}
       <Card>
         <CardHeader>
-          <CardTitle>Órdenes Filtradas ({orders.length})</CardTitle>
+          <CardTitle>{t('filteredOrders', { count: orders.length })}</CardTitle>
         </CardHeader>
         <CardContent>
           {isLoading ? (
-            <div className="text-center py-8 text-muted-foreground">Cargando...</div>
+            <div className="text-center py-8 text-muted-foreground">{t('loading')}</div>
           ) : orders.length === 0 ? (
             <div className="text-center py-8">
               <Package className="w-12 h-12 mx-auto text-muted-foreground mb-4" />
-              <p className="text-muted-foreground">No se encontraron órdenes</p>
-              <p className="text-sm text-muted-foreground mt-1">Intenta ajustar los filtros</p>
+              <p className="text-muted-foreground">{t('noOrders')}</p>
+              <p className="text-sm text-muted-foreground mt-1">{t('tryAdjustFilters')}</p>
             </div>
           ) : (
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>Número de Seguimiento</TableHead>
-                  <TableHead>Cliente</TableHead>
-                  <TableHead>Estado</TableHead>
-                  <TableHead>Entrega</TableHead>
-                  <TableHead className="text-center">Artículos</TableHead>
-                  <TableHead>Fecha</TableHead>
+                  <TableHead>{t('tableTrackingNumber')}</TableHead>
+                  <TableHead>{t('tableClient')}</TableHead>
+                  <TableHead>{t('tableStatus')}</TableHead>
+                  <TableHead>{t('tableDeliveryType')}</TableHead>
+                  <TableHead className="text-center">{t('tableItems')}</TableHead>
+                  <TableHead>{t('tableDate')}</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -253,12 +246,10 @@ export default function ReportsClient({
                     <TableCell>{order.clientName || order.guestName}</TableCell>
                     <TableCell>
                       <Badge className={statusColors[order.status] || 'bg-gray-100'}>
-                        {statusLabels[order.status] || order.status}
+                        {getStatusLabel(locale, order.status)}
                       </Badge>
                     </TableCell>
-                    <TableCell>
-                      {deliveryTypeLabels[order.deliveryType] || order.deliveryType}
-                    </TableCell>
+                    <TableCell>{getDeliveryTypeLabel(locale, order.deliveryType)}</TableCell>
                     <TableCell className="text-center">{order.itemsCount}</TableCell>
                     <TableCell>
                       {order.createdAt ? format(new Date(order.createdAt), 'dd MMM yyyy') : 'N/A'}

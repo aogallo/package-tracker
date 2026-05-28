@@ -1,4 +1,5 @@
 import { notFound, redirect } from 'next/navigation';
+import { getTranslations } from 'next-intl/server';
 import { getClientById, updateClient, deleteClient } from '@/lib/actions/clients';
 import { ClientForm } from '@/components/client-form';
 import { Button } from '@/components/ui/button';
@@ -8,6 +9,7 @@ interface EditClientPageProps {
 }
 
 export default async function EditClientPage({ params }: EditClientPageProps) {
+  const t = await getTranslations('admin.clients');
   const { id } = await params;
   const clientId = parseInt(id, 10);
 
@@ -57,7 +59,7 @@ export default async function EditClientPage({ params }: EditClientPageProps) {
         <div className="mt-6 pt-6 border-t">
           <form action={handleDelete}>
             <Button type="submit" variant="destructive">
-              Eliminar Cliente
+              {t('deleteButton')}
             </Button>
           </form>
         </div>

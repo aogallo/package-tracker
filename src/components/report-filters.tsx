@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import { useTranslations } from 'next-intl';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -19,6 +20,15 @@ export type FilterState = {
   status: string;
 };
 
+const STATUS_KEY_MAP: Record<string, string> = {
+  pending: 'filters.statusPending',
+  confirmed: 'filters.statusConfirmed',
+  in_transit: 'filters.statusInTransit',
+  delivered: 'filters.statusDelivered',
+  picked_up: 'filters.statusPickedUp',
+  canceled: 'filters.statusCanceled',
+};
+
 type ReportFiltersProps = {
   onApply: (filters: FilterState) => void;
   clients: Array<{ id: number; name: string }>;
@@ -26,6 +36,7 @@ type ReportFiltersProps = {
 };
 
 export function ReportFilters({ onApply, clients, initialFilters }: ReportFiltersProps) {
+  const t = useTranslations('admin.reports');
   const [filters, setFilters] = useState<FilterState>({
     dateFrom: initialFilters?.dateFrom || '',
     dateTo: initialFilters?.dateTo || '',
@@ -62,7 +73,7 @@ export function ReportFilters({ onApply, clients, initialFilters }: ReportFilter
         {/* Date From */}
         <div className="space-y-1.5">
           <Label htmlFor="dateFrom" className="text-sm font-medium">
-            Desde
+            {t('filters.dateFrom')}
           </Label>
           <Input
             id="dateFrom"
@@ -75,7 +86,7 @@ export function ReportFilters({ onApply, clients, initialFilters }: ReportFilter
         {/* Date To */}
         <div className="space-y-1.5">
           <Label htmlFor="dateTo" className="text-sm font-medium">
-            Hasta
+            {t('filters.dateTo')}
           </Label>
           <Input
             id="dateTo"
@@ -88,14 +99,14 @@ export function ReportFilters({ onApply, clients, initialFilters }: ReportFilter
         {/* Client */}
         <div className="space-y-1.5">
           <Label htmlFor="clientId" className="text-sm font-medium">
-            Cliente
+            {t('filters.client')}
           </Label>
           <Select value={filters.clientId} onValueChange={handleSelectChange('clientId')}>
             <SelectTrigger id="clientId">
-              <SelectValue placeholder="Todos los Clientes" />
+              <SelectValue placeholder={t('filters.allClients')} />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="all">Todos los Clientes</SelectItem>
+              <SelectItem value="all">{t('filters.allClients')}</SelectItem>
               {clients.map((client) => (
                 <SelectItem key={client.id} value={client.id.toString()}>
                   {client.name}
@@ -108,20 +119,20 @@ export function ReportFilters({ onApply, clients, initialFilters }: ReportFilter
         {/* Status */}
         <div className="space-y-1.5">
           <Label htmlFor="status" className="text-sm font-medium">
-            Estado
+            {t('filters.status')}
           </Label>
           <Select value={filters.status} onValueChange={handleSelectChange('status')}>
             <SelectTrigger id="status">
-              <SelectValue placeholder="Todos los Estados" />
+              <SelectValue placeholder={t('filters.allStatuses')} />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="all">Todos los Estados</SelectItem>
-              <SelectItem value="pending">Pendiente</SelectItem>
-              <SelectItem value="confirmed">Confirmado</SelectItem>
-              <SelectItem value="in_transit">En Camino</SelectItem>
-              <SelectItem value="delivered">Entregado</SelectItem>
-              <SelectItem value="picked_up">Recogido</SelectItem>
-              <SelectItem value="canceled">Cancelado</SelectItem>
+              <SelectItem value="all">{t('filters.allStatuses')}</SelectItem>
+              <SelectItem value="pending">{t('filters.statusPending')}</SelectItem>
+              <SelectItem value="confirmed">{t('filters.statusConfirmed')}</SelectItem>
+              <SelectItem value="in_transit">{t('filters.statusInTransit')}</SelectItem>
+              <SelectItem value="delivered">{t('filters.statusDelivered')}</SelectItem>
+              <SelectItem value="picked_up">{t('filters.statusPickedUp')}</SelectItem>
+              <SelectItem value="canceled">{t('filters.statusCanceled')}</SelectItem>
             </SelectContent>
           </Select>
         </div>
@@ -129,10 +140,10 @@ export function ReportFilters({ onApply, clients, initialFilters }: ReportFilter
         {/* Actions */}
         <div className="flex items-end gap-2">
           <Button onClick={handleApply} className="flex-1">
-            Aplicar Filtros
+            {t('filters.applyButton')}
           </Button>
           <Button variant="outline" onClick={handleReset}>
-            Limpiar
+            {t('filters.clearButton')}
           </Button>
         </div>
       </div>
