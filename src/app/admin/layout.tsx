@@ -1,5 +1,6 @@
 import { auth, signOut } from '@/lib/auth';
 import { redirect } from 'next/navigation';
+import { getTranslations } from 'next-intl/server';
 import { Button } from '@/components/ui/button';
 import {
   Package,
@@ -13,6 +14,7 @@ import {
 import Link from 'next/link';
 
 export default async function AdminLayout({ children }: { children: React.ReactNode }) {
+  const t = await getTranslations('admin.layout');
   const session = await auth();
 
   if (!session) {
@@ -30,7 +32,7 @@ export default async function AdminLayout({ children }: { children: React.ReactN
               <Package className="h-5 w-5 text-primary-foreground" />
             </div>
             <div>
-              <h1 className="font-semibold text-sm">Panel Admin</h1>
+              <h1 className="font-semibold text-sm">{t('panelName')}</h1>
               <p className="text-xs text-muted-foreground">{session.user?.email}</p>
             </div>
           </div>
@@ -39,19 +41,19 @@ export default async function AdminLayout({ children }: { children: React.ReactN
         {/* Navigation */}
         <nav className="flex-1 p-4 space-y-1">
           <NavLink href="/admin" icon={LayoutDashboard}>
-            Inicio
+            {t('navHome')}
           </NavLink>
           <NavLink href="/admin/clients" icon={Users}>
-            Clientes
+            {t('navClients')}
           </NavLink>
           <NavLink href="/admin/orders" icon={ClipboardList}>
-            Órdenes
+            {t('navOrders')}
           </NavLink>
           <NavLink href="/admin/reports" icon={BarChart3}>
-            Informes
+            {t('navReports')}
           </NavLink>
           <NavLink href="/admin/settings" icon={Settings}>
-            Configuración
+            {t('navSettings')}
           </NavLink>
         </nav>
 
@@ -69,7 +71,7 @@ export default async function AdminLayout({ children }: { children: React.ReactN
               className="w-full justify-start text-muted-foreground hover:text-destructive"
             >
               <LogOut className="mr-2 h-4 w-4" />
-              Cerrar Sesión
+              {t('logout')}
             </Button>
           </form>
         </div>

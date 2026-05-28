@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import { getTranslations, getLocale } from 'next-intl/server';
 import { getOrders } from '@/lib/actions/orders';
 import { getClientsForSelect } from '@/lib/actions/orders';
 import { Button } from '@/components/ui/button';
@@ -13,6 +14,7 @@ import {
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { format } from 'date-fns';
+import { getStatusLabel, getDeliveryTypeLabel } from '@/lib/i18n/labels';
 
 const statusColors: Record<string, string> = {
   pending: 'bg-yellow-500',
@@ -23,25 +25,13 @@ const statusColors: Record<string, string> = {
   canceled: 'bg-red-500',
 };
 
-const statusLabels: Record<string, string> = {
-  pending: 'Pendiente',
-  confirmed: 'Confirmado',
-  in_transit: 'En Camino',
-  delivered: 'Entregado',
-  picked_up: 'Recogido',
-  canceled: 'Cancelado',
-};
-
-const deliveryTypeLabels: Record<string, string> = {
-  delivery: 'Entrega',
-  pickup: 'Recoger',
-};
-
 export default async function OrdersPage({
   searchParams,
 }: {
   searchParams: Promise<{ status?: string; client?: string; from?: string; to?: string }>;
 }) {
+  const t = await getTranslations('admin.orders');
+  const locale = await getLocale();
   const params = await searchParams;
 
   const filters = {
@@ -61,39 +51,39 @@ export default async function OrdersPage({
     ...order,
     displayName: order.clientId
       ? clientMap.get(order.clientId)?.name || order.guestName
-      : `Invitado: ${order.guestName}`,
+      : t('guestPrefix', { name: order.guestName }),
   }));
 
   return (
     <div className="container mx-auto py-10">
       <div className="flex items-center justify-between mb-6">
-        <h1 className="text-3xl font-bold">Órdenes</h1>
+        <h1 className="text-3xl font-bold">{t('title')}</h1>
         <Link href="/admin/orders/new">
-          <Button>Crear Orden</Button>
+          <Button>{t('createButton')}</Button>
         </Link>
       </div>
 
       <Card>
         <CardHeader>
-          <CardTitle>Todas las Órdenes</CardTitle>
+          <CardTitle>{t('allOrders')}</CardTitle>
         </CardHeader>
         <CardContent>
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead>Número de Seguimiento</TableHead>
-                <TableHead>Cliente</TableHead>
-                <TableHead>Tipo</TableHead>
-                <TableHead>Estado</TableHead>
-                <TableHead>Fecha</TableHead>
-                <TableHead className="text-right">Acciones</TableHead>
+                <TableHead>{t('tableTrackingNumber')}</TableHead>
+                <TableHead>{t('tableClient')}</TableHead>
+                <TableHead>{t('tableType')}</TableHead>
+                <TableHead>{t('tableStatus')}</TableHead>
+                <TableHead>{t('tableDate')}</TableHead>
+                <TableHead className="text-right">{t('tableActions')}</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {enrichedOrders.length === 0 ? (
                 <TableRow>
                   <TableCell colSpan={6} className="text-center py-8 text-muted-foreground">
-                    No se encontraron órdenes.
+                    {t('noOrders')}
                   </TableCell>
                 </TableRow>
               ) : (
@@ -106,12 +96,10 @@ export default async function OrdersPage({
                         <span className="text-sm text-muted-foreground">{order.guestEmail}</span>
                       </div>
                     </TableCell>
-                    <TableCell>
-                      {deliveryTypeLabels[order.deliveryType] || order.deliveryType}
-                    </TableCell>
+                    <TableCell>{getDeliveryTypeLabel(locale, order.deliveryType)}</TableCell>
                     <TableCell>
                       <Badge className={statusColors[order.status]}>
-                        {statusLabels[order.status]}
+                        {getStatusLabel(locale, order.status)}
                       </Badge>
                     </TableCell>
                     <TableCell>
@@ -120,7 +108,7 @@ export default async function OrdersPage({
                     <TableCell className="text-right">
                       <Link href={`/admin/orders/${order.id}`}>
                         <Button variant="outline" size="sm">
-                          Ver
+                          {t('tableView')}
                         </Button>
                       </Link>
                     </TableCell>
