@@ -12,7 +12,7 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import { Package, Truck, Clock, CheckCircle, AlertCircle, ArrowLeft } from 'lucide-react';
-import { getTranslations, getFormatter, getLocale } from 'next-intl/server';
+import { getTranslations, getFormatter } from 'next-intl/server';
 import Link from 'next/link';
 
 interface TrackPageProps {
@@ -37,7 +37,6 @@ export default async function TrackPage({ params }: TrackPageProps) {
   const { trackingNumber } = await params;
   const t = await getTranslations('track');
   const formatter = await getFormatter();
-  const locale = await getLocale();
 
   const order = await trackOrder(trackingNumber);
 
@@ -45,7 +44,7 @@ export default async function TrackPage({ params }: TrackPageProps) {
     notFound();
   }
 
-  const statusInfo = await getStatusDisplayInfo(order.status, locale);
+  const statusInfo = await getStatusDisplayInfo(order.status);
 
   // Get timeline events based on status
   const timelineEvents = [
