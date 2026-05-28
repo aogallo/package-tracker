@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
+import { useTranslations, useLocale } from 'next-intl';
 import { toast } from 'sonner';
 import {
   Select,
@@ -12,6 +13,7 @@ import {
 } from '@/components/ui/select';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import { getStatusLabels } from '@/lib/i18n/labels';
 
 const statusColors: Record<string, string> = {
   pending: 'bg-yellow-500',
@@ -26,24 +28,18 @@ function getStatusColor(status: string): string {
   return statusColors[status] || 'bg-gray-500';
 }
 
-const statusLabels: Record<string, string> = {
-  pending: 'Pendiente',
-  confirmed: 'Confirmado',
-  in_transit: 'En Camino',
-  delivered: 'Entregado',
-  picked_up: 'Recogido',
-  canceled: 'Cancelado',
-};
-
 interface StatusUpdateFormProps {
   orderId: number;
   currentStatus: string;
 }
 
 export function StatusUpdateForm({ orderId, currentStatus }: StatusUpdateFormProps) {
+  const t = useTranslations('admin.orders');
+  const locale = useLocale();
   const router = useRouter();
   const [status, setStatus] = useState(currentStatus);
   const [loading, setLoading] = useState(false);
+  const statusLabels = getStatusLabels(locale);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -57,14 +53,14 @@ export function StatusUpdateForm({ orderId, currentStatus }: StatusUpdateFormPro
       });
 
       if (!res.ok) {
-        const error = await res.json().catch(() => ({ error: 'Error al actualizar' }));
-        throw new Error(error.error || 'Error al actualizar');
+        const error = await res.json().catch(() => ({ error: t('statusUpdate.error') }));
+        throw new Error(error.error || t('statusUpdate.error'));
       }
 
-      toast.success('Estado actualizado correctamente');
+      toast.success(t('statusUpdate.success'));
       router.refresh();
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : 'Error al actualizar el estado');
+      toast.error(error instanceof Error ? error.message : t('statusUpdate.genericError'));
     } finally {
       setLoading(false);
     }
@@ -86,7 +82,7 @@ export function StatusUpdateForm({ orderId, currentStatus }: StatusUpdateFormPro
       </Select>
       <Badge className={`${getStatusColor(status)} text-white`}>{statusLabels[status]}</Badge>
       <Button type="submit" size="sm" disabled={loading}>
-        {loading ? 'Guardando...' : 'Actualizar'}
+        {loading ? t('statusUpdate.saving') : t('statusUpdate.updateButton')}
       </Button>
     </form>
   );

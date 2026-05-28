@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
+import { useTranslations } from 'next-intl';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -20,6 +21,7 @@ interface ClientFormProps {
 }
 
 export function ClientForm({ initialData, action }: ClientFormProps) {
+  const t = useTranslations('admin.clients');
   const router = useRouter();
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -31,11 +33,11 @@ export function ClientForm({ initialData, action }: ClientFormProps) {
 
     try {
       await action(formData);
-      toast.success(initialData ? 'Cliente actualizado' : 'Cliente creado');
+      toast.success(initialData ? t('form.toastUpdated') : t('form.toastCreated'));
       router.push('/admin/clients');
       router.refresh();
     } catch (error) {
-      toast.error('Error al guardar cliente');
+      toast.error(t('form.toastError'));
     } finally {
       setIsSubmitting(false);
     }
@@ -44,62 +46,66 @@ export function ClientForm({ initialData, action }: ClientFormProps) {
   return (
     <Card className="max-w-2xl mx-auto">
       <CardHeader>
-        <CardTitle>{initialData ? 'Editar Cliente' : 'Nuevo Cliente'}</CardTitle>
+        <CardTitle>{initialData ? t('form.editTitle') : t('form.newTitle')}</CardTitle>
       </CardHeader>
       <CardContent>
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="space-y-2">
-            <Label htmlFor="name">Nombre *</Label>
+            <Label htmlFor="name">{t('form.nameLabel')}</Label>
             <Input
               id="name"
               name="name"
               type="text"
               required
               defaultValue={initialData?.name}
-              placeholder="Ingrese nombre del cliente"
+              placeholder={t('form.namePlaceholder')}
             />
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="email">Correo Electrónico *</Label>
+            <Label htmlFor="email">{t('form.emailLabel')}</Label>
             <Input
               id="email"
               name="email"
               type="email"
               required
               defaultValue={initialData?.email}
-              placeholder="cliente@ejemplo.com"
+              placeholder={t('form.emailPlaceholder')}
             />
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="phone">Teléfono</Label>
+            <Label htmlFor="phone">{t('form.phoneLabel')}</Label>
             <Input
               id="phone"
               name="phone"
               type="tel"
               defaultValue={initialData?.phone}
-              placeholder="+502 1234-5678"
+              placeholder={t('form.phonePlaceholder')}
             />
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="address">Dirección</Label>
+            <Label htmlFor="address">{t('form.addressLabel')}</Label>
             <Input
               id="address"
               name="address"
               type="text"
               defaultValue={initialData?.address}
-              placeholder="123 Calle Principal, Zona 1"
+              placeholder={t('form.addressPlaceholder')}
             />
           </div>
 
           <div className="flex gap-4 pt-4">
             <Button type="submit" disabled={isSubmitting}>
-              {isSubmitting ? 'Guardando...' : initialData ? 'Actualizar Cliente' : 'Crear Cliente'}
+              {isSubmitting
+                ? t('form.saving')
+                : initialData
+                  ? t('form.updateButton')
+                  : t('form.createButton')}
             </Button>
             <Button type="button" variant="outline" onClick={() => router.push('/admin/clients')}>
-              Cancelar
+              {t('form.cancelButton')}
             </Button>
           </div>
         </form>

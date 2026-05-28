@@ -2,6 +2,7 @@
 
 import { useState, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
+import { useTranslations } from 'next-intl';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -35,6 +36,7 @@ interface OrderFormProps {
 }
 
 export function OrderForm({ clients, action }: OrderFormProps) {
+  const t = useTranslations('admin.orders');
   const router = useRouter();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [selectedClientId, setSelectedClientId] = useState<string>('guest');
@@ -106,11 +108,11 @@ export function OrderForm({ clients, action }: OrderFormProps) {
 
     try {
       await action(formData);
-      toast.success('Orden creada');
+      toast.success(t('form.toastCreated'));
       router.push('/admin/orders');
       router.refresh();
     } catch (error) {
-      toast.error('Error al crear la orden');
+      toast.error(t('form.toastError'));
       console.error('Order creation error:', error);
     } finally {
       setIsSubmitting(false);
@@ -120,16 +122,16 @@ export function OrderForm({ clients, action }: OrderFormProps) {
   return (
     <Card className="max-w-4xl mx-auto">
       <CardHeader>
-        <CardTitle>Crear Nueva Orden</CardTitle>
+        <CardTitle>{t('form.title')}</CardTitle>
       </CardHeader>
       <CardContent>
         <form onSubmit={handleSubmit} className="space-y-6">
           {/* Client Selection with Search */}
           <div className="space-y-2">
-            <Label>Tipo de Cliente</Label>
+            <Label>{t('form.clientType')}</Label>
             <div className="space-y-2">
               <Input
-                placeholder="Buscar cliente por nombre o email..."
+                placeholder={t('form.searchClient')}
                 value={clientSearch}
                 onChange={(e) => handleClientSearch(e.target.value)}
                 className="mb-2"
@@ -142,14 +144,14 @@ export function OrderForm({ clients, action }: OrderFormProps) {
                         {selectedClient.name} ({selectedClient.email})
                       </span>
                     ) : selectedClientId === 'guest' ? (
-                      'Invitado (Sin Cuenta)'
+                      t('form.guestOption')
                     ) : (
-                      'Seleccionar cliente...'
+                      t('form.selectClient')
                     )}
                   </SelectValue>
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="guest">Invitado (Sin Cuenta)</SelectItem>
+                  <SelectItem value="guest">{t('form.guestOption')}</SelectItem>
                   {filteredClients.map((client) => (
                     <SelectItem key={client.id} value={client.id.toString()}>
                       <div className="flex flex-col">
@@ -168,36 +170,41 @@ export function OrderForm({ clients, action }: OrderFormProps) {
             <>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <Label htmlFor="guestName">Nombre del Invitado *</Label>
+                  <Label htmlFor="guestName">{t('form.guestName')}</Label>
                   <Input
                     id="guestName"
                     name="guestName"
                     type="text"
                     required={!isRegisteredClient}
-                    placeholder="Ingrese nombre del invitado"
+                    placeholder={t('form.guestNamePlaceholder')}
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="guestEmail">Email del Invitado *</Label>
+                  <Label htmlFor="guestEmail">{t('form.guestEmail')}</Label>
                   <Input
                     id="guestEmail"
                     name="guestEmail"
                     type="email"
                     required={!isRegisteredClient}
-                    placeholder="invitado@ejemplo.com"
+                    placeholder={t('form.guestEmailPlaceholder')}
                   />
                 </div>
               </div>
               <div className="space-y-2">
-                <Label htmlFor="guestPhone">Teléfono del Invitado</Label>
-                <Input id="guestPhone" name="guestPhone" type="tel" placeholder="+502 1234-5678" />
+                <Label htmlFor="guestPhone">{t('form.guestPhone')}</Label>
+                <Input
+                  id="guestPhone"
+                  name="guestPhone"
+                  type="tel"
+                  placeholder={t('form.guestPhonePlaceholder')}
+                />
               </div>
             </>
           )}
 
           {/* Delivery Type */}
           <div className="space-y-2">
-            <Label>Tipo de Entrega</Label>
+            <Label>{t('form.deliveryType')}</Label>
             <div className="flex gap-4">
               <label className="flex items-center gap-2 cursor-pointer">
                 <input
@@ -207,7 +214,7 @@ export function OrderForm({ clients, action }: OrderFormProps) {
                   checked={deliveryType === 'delivery'}
                   onChange={() => setDeliveryType('delivery')}
                 />
-                <span>Entrega a Domicilio</span>
+                <span>{t('form.deliveryHome')}</span>
               </label>
               <label className="flex items-center gap-2 cursor-pointer">
                 <input
@@ -217,7 +224,7 @@ export function OrderForm({ clients, action }: OrderFormProps) {
                   checked={deliveryType === 'pickup'}
                   onChange={() => setDeliveryType('pickup')}
                 />
-                <span>Recoger en Tienda</span>
+                <span>{t('form.deliveryStore')}</span>
               </label>
             </div>
           </div>
@@ -226,48 +233,53 @@ export function OrderForm({ clients, action }: OrderFormProps) {
           {deliveryType === 'delivery' && (
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <div className="space-y-2 md:col-span-3">
-                <Label htmlFor="deliveryAddress">Dirección de Entrega</Label>
+                <Label htmlFor="deliveryAddress">{t('form.deliveryAddress')}</Label>
                 <Input
                   id="deliveryAddress"
                   name="deliveryAddress"
                   type="text"
-                  placeholder="123 Calle Principal, Zona 1"
+                  placeholder={t('form.deliveryAddressPlaceholder')}
                 />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="deliveryCity">Ciudad</Label>
+                <Label htmlFor="deliveryCity">{t('form.city')}</Label>
                 <Input
                   id="deliveryCity"
                   name="deliveryCity"
                   type="text"
-                  placeholder="Ciudad de Guatemala"
+                  placeholder={t('form.cityPlaceholder')}
                 />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="deliveryZip">Código Postal</Label>
-                <Input id="deliveryZip" name="deliveryZip" type="text" placeholder="01001" />
+                <Label htmlFor="deliveryZip">{t('form.zipCode')}</Label>
+                <Input
+                  id="deliveryZip"
+                  name="deliveryZip"
+                  type="text"
+                  placeholder={t('form.zipCodePlaceholder')}
+                />
               </div>
             </div>
           )}
 
           {/* Notes */}
           <div className="space-y-2">
-            <Label htmlFor="notes">Notas</Label>
+            <Label htmlFor="notes">{t('form.notes')}</Label>
             <textarea
               id="notes"
               name="notes"
               className="w-full min-h-[80px] rounded-md border border-input bg-transparent px-3 py-2 text-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-              placeholder="Instrucciones especiales..."
+              placeholder={t('form.notesPlaceholder')}
             />
           </div>
 
           {/* Order Items */}
           <div className="space-y-4">
             <div className="flex items-center justify-between">
-              <Label>Artículos de la Orden</Label>
+              <Label>{t('form.itemsTitle')}</Label>
               <Button type="button" variant="outline" size="sm" onClick={addItem}>
                 <Plus className="h-4 w-4 mr-1" />
-                Agregar Artículo
+                {t('form.addItem')}
               </Button>
             </div>
 
@@ -275,26 +287,26 @@ export function OrderForm({ clients, action }: OrderFormProps) {
               <div key={index} className="flex gap-4 items-start p-4 border rounded-lg">
                 <div className="flex-1 space-y-2">
                   <Input
-                    placeholder="Nombre del artículo"
+                    placeholder={t('form.itemNamePlaceholder')}
                     value={item.name}
                     onChange={(e) => updateItem(index, 'name', e.target.value)}
                     required
                     className="font-medium"
                   />
                   <Input
-                    placeholder="Descripción (opcional)"
+                    placeholder={t('form.itemDescriptionPlaceholder')}
                     value={item.description}
                     onChange={(e) => updateItem(index, 'description', e.target.value)}
                   />
                   <Input
-                    placeholder="URL del producto (opcional)"
+                    placeholder={t('form.itemUrlPlaceholder')}
                     type="url"
                     value={item.url}
                     onChange={(e) => updateItem(index, 'url', e.target.value)}
                   />
                 </div>
                 <div className="w-24 space-y-2">
-                  <Label className="text-xs">Cant.</Label>
+                  <Label className="text-xs">{t('form.itemQty')}</Label>
                   <Input
                     type="number"
                     min="1"
@@ -318,10 +330,10 @@ export function OrderForm({ clients, action }: OrderFormProps) {
 
           <div className="flex gap-4 pt-4">
             <Button type="submit" disabled={isSubmitting}>
-              {isSubmitting ? 'Creando...' : 'Crear Orden'}
+              {isSubmitting ? t('form.saving') : t('form.submitButton')}
             </Button>
             <Button type="button" variant="outline" onClick={() => router.push('/admin/orders')}>
-              Cancelar
+              {t('form.cancelButton')}
             </Button>
           </div>
         </form>
