@@ -7,7 +7,28 @@ import { format } from 'date-fns';
 import { es, enUS } from 'date-fns/locale';
 import { getOrders } from '@/lib/actions/orders';
 import { getStats } from '@/lib/actions/stats';
-import { getDeliveryTypeLabel, getStatusLabel } from '@/lib/i18n/labels';
+// Inline label maps — replaced by import from @/lib/i18n/labels when PR #5 merges
+const statusLabelMap: Record<string, { es: string; en: string }> = {
+  pending: { es: 'Pendiente', en: 'Pending' },
+  confirmed: { es: 'Confirmado', en: 'Confirmed' },
+  in_transit: { es: 'En Camino', en: 'In Transit' },
+  delivered: { es: 'Entregado', en: 'Delivered' },
+  picked_up: { es: 'Recogido', en: 'Picked Up' },
+  canceled: { es: 'Cancelado', en: 'Canceled' },
+};
+
+const deliveryTypeLabelMap: Record<string, { es: string; en: string }> = {
+  delivery: { es: 'Entrega', en: 'Delivery' },
+  pickup: { es: 'Recoger', en: 'Pickup' },
+};
+
+function getStatusLabel(locale: string, status: string): string {
+  return statusLabelMap[status]?.[locale as 'es' | 'en'] || status;
+}
+
+function getDeliveryTypeLabel(locale: string, type: string): string {
+  return deliveryTypeLabelMap[type]?.[locale as 'es' | 'en'] || type.toUpperCase();
+}
 
 const statusColors: Record<string, { bg: string; text: string }> = {
   pending: { bg: 'bg-yellow-100', text: 'text-yellow-900' },
