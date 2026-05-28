@@ -1,5 +1,5 @@
 import { Document, Page, Text, View, StyleSheet, Image } from '@react-pdf/renderer';
-import { format } from 'date-fns';
+import { getStatusLabel, getDeliveryTypeLabel } from '@/lib/i18n/labels';
 
 // Use default Helvetica font - no custom font registration needed
 // This avoids issues with Google Fonts CDN URLs that @react-pdf/renderer cannot fetch
@@ -201,6 +201,25 @@ type OrderItem = {
   url: string | null;
 };
 
+export type TicketTranslations = {
+  companyTagline: string;
+  title: string;
+  trackingLabel: string;
+  recipientLabel: string;
+  deliveryTypeLabel: string;
+  deliveryLabel: string;
+  sectionItems: string;
+  tableItem: string;
+  tableQty: string;
+  tableDescription: string;
+  tableUrl: string;
+  viewLink: string;
+  noItems: string;
+  qrLabel: string;
+  generatedDate: string;
+  orderDate: string;
+};
+
 type TicketTemplateProps = {
   trackingNumber: string;
   guestName: string;
@@ -209,10 +228,11 @@ type TicketTemplateProps = {
   status: string;
   items: OrderItem[];
   qrCodeDataUrl: string;
-  createdAt: Date;
   deliveryAddress?: string | null;
   deliveryCity?: string | null;
   companyName?: string;
+  locale?: string;
+  translations: TicketTranslations;
 };
 
 function getStatusStyle(status: string) {
@@ -233,20 +253,6 @@ function getStatusStyle(status: string) {
   }
 }
 
-const statusLabels: Record<string, string> = {
-  pending: 'Pendiente',
-  confirmed: 'Confirmado',
-  in_transit: 'En Camino',
-  delivered: 'Entregado',
-  picked_up: 'Recogido',
-  canceled: 'Cancelado',
-};
-
-const deliveryTypeLabels: Record<string, string> = {
-  delivery: 'ENTREGA',
-  pickup: 'RECOGER',
-};
-
 export function TicketTemplate({
   trackingNumber,
   guestName,
@@ -255,10 +261,11 @@ export function TicketTemplate({
   status,
   items,
   qrCodeDataUrl,
-  createdAt,
   deliveryAddress,
   deliveryCity,
   companyName = 'Package Tracker',
+  locale = 'es',
+  translations,
 }: TicketTemplateProps) {
   return (
     <Document>
@@ -267,17 +274,17 @@ export function TicketTemplate({
         <View style={styles.header}>
           <View>
             <Text style={styles.logo}>{companyName.toUpperCase()}</Text>
-            <Text style={styles.companyName}>Entrega Rápida y Confiable</Text>
+            <Text style={styles.companyName}>{translations.companyTagline}</Text>
           </View>
-          <Text style={styles.ticketTitle}>TICKET</Text>
+          <Text style={styles.ticketTitle}>{translations.title}</Text>
         </View>
 
         {/* Tracking Number Section */}
         <View style={styles.trackingSection}>
-          <Text style={styles.trackingLabel}>Número de Seguimiento</Text>
+          <Text style={styles.trackingLabel}>{translations.trackingLabel}</Text>
           <Text style={styles.trackingNumber}>{trackingNumber}</Text>
           <Text style={[styles.statusBadge, getStatusStyle(status)]}>
-            {statusLabels[status] || status}
+            {getStatusLabel(locale, status)}
           </Text>
         </View>
 
@@ -285,21 +292,21 @@ export function TicketTemplate({
         <View style={styles.infoGrid}>
           <View style={styles.infoColumn}>
             <View style={styles.infoBlock}>
-              <Text style={styles.infoLabel}>Destinatario</Text>
+              <Text style={styles.infoLabel}>{translations.recipientLabel}</Text>
               <Text style={styles.infoValue}>{guestName}</Text>
               <Text style={styles.guestLabel}>{guestEmail}</Text>
             </View>
           </View>
           <View style={styles.infoColumn}>
             <View style={styles.infoBlock}>
-              <Text style={styles.infoLabel}>Tipo de Entrega</Text>
+              <Text style={styles.infoLabel}>{translations.deliveryTypeLabel}</Text>
               <Text style={styles.deliveryBadge}>
-                {deliveryTypeLabels[deliveryType] || deliveryType.toUpperCase()}
+                {getDeliveryTypeLabel(locale, deliveryType).toUpperCase()}
               </Text>
             </View>
             {deliveryType === 'delivery' && deliveryAddress && (
               <View style={styles.infoBlock}>
-                <Text style={styles.infoLabel}>Dirección</Text>
+                <Text style={styles.infoLabel}>{translations.deliveryLabel}</Text>
                 <Text style={styles.infoValue}>{deliveryAddress}</Text>
                 {deliveryCity && <Text style={styles.infoValue}>{deliveryCity}</Text>}
               </View>
@@ -309,24 +316,30 @@ export function TicketTemplate({
 
         {/* Items Table */}
         <View style={styles.itemsTable}>
-          <Text style={styles.sectionTitle}>Artículos de la Orden</Text>
+          <Text style={styles.sectionTitle}>{translations.sectionItems}</Text>
           <View style={styles.tableHeader}>
-            <Text style={[styles.tableHeaderCell, styles.colItem]}>Artículo</Text>
-            <Text style={[styles.tableHeaderCell, styles.colQty]}>Cant.</Text>
-            <Text style={[styles.tableHeaderCell, styles.colDesc]}>Descripción</Text>
-            <Text style={[styles.tableHeaderCell, styles.colUrl]}>URL</Text>
+            <Text style={[styles.tableHeaderCell, styles.colItem]}>{translations.tableItem}</Text>
+            <Text style={[styles.tableHeaderCell, styles.colQty]}>{translations.tableQty}</Text>
+            <Text style={[styles.tableHeaderCell, styles.colDesc]}>
+              {translations.tableDescription}
+            </Text>
+            <Text style={[styles.tableHeaderCell, styles.colUrl]}>{translations.tableUrl}</Text>
           </View>
           {items.map((item) => (
             <View key={item.id} style={styles.tableRow}>
               <Text style={[styles.tableCell, styles.colItem]}>{item.name}</Text>
               <Text style={[styles.tableCell, styles.colQty]}>{item.quantity}</Text>
               <Text style={[styles.tableCell, styles.colDesc]}>{item.description || '-'}</Text>
-              <Text style={[styles.tableCell, styles.colUrl]}>{item.url ? 'Ver' : '-'}</Text>
+              <Text style={[styles.tableCell, styles.colUrl]}>
+                {item.url ? translations.viewLink : '-'}
+              </Text>
             </View>
           ))}
           {items.length === 0 && (
             <View style={styles.tableRow}>
-              <Text style={[styles.tableCell, { textAlign: 'center' }]}>Sin artículos</Text>
+              <Text style={[styles.tableCell, { textAlign: 'center' }]}>
+                {translations.noItems}
+              </Text>
             </View>
           )}
         </View>
@@ -335,11 +348,11 @@ export function TicketTemplate({
         <View style={styles.footer}>
           <View style={styles.qrSection}>
             {qrCodeDataUrl && <Image src={qrCodeDataUrl} style={{ width: 80, height: 80 }} />}
-            <Text style={styles.qrLabel}>Escanea para rastrear tu paquete</Text>
+            <Text style={styles.qrLabel}>{translations.qrLabel}</Text>
           </View>
           <View>
-            <Text style={styles.timestamp}>Generado: {format(createdAt, 'dd MMM yyyy HH:mm')}</Text>
-            <Text style={styles.timestamp}>Fecha de Orden: {format(createdAt, 'dd MMM yyyy')}</Text>
+            <Text style={styles.timestamp}>{translations.generatedDate}</Text>
+            <Text style={styles.timestamp}>{translations.orderDate}</Text>
           </View>
         </View>
       </Page>

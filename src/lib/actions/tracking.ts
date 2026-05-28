@@ -53,49 +53,76 @@ export async function trackOrder(trackingNumber: string): Promise<PublicOrderInf
 }
 
 /**
- * Get status display info for public tracking (Spanish)
+ * Get status display info for public tracking (locale-aware)
  */
 export async function getStatusDisplayInfo(
-  status: string
+  status: string,
+  locale: string = 'es'
 ): Promise<{ label: string; description: string; color: string }> {
-  const statusInfo: Record<string, { label: string; description: string; color: string }> = {
+  const isEn = locale === 'en';
+
+  const statusInfo: Record<
+    string,
+    { es: string; en: string; esDesc: string; enDesc: string; color: string }
+  > = {
     pending: {
-      label: 'Orden Recibida',
-      description: 'Tu orden ha sido recibida y está esperando ser procesada.',
+      es: 'Orden Recibida',
+      en: 'Order Received',
+      esDesc: 'Tu orden ha sido recibida y está esperando ser procesada.',
+      enDesc: 'Your order has been received and is awaiting processing.',
       color: 'bg-yellow-100 text-yellow-800 border-yellow-300',
     },
     confirmed: {
-      label: 'Confirmado',
-      description: 'Tu orden ha sido confirmada y se está preparando.',
+      es: 'Confirmado',
+      en: 'Confirmed',
+      esDesc: 'Tu orden ha sido confirmada y se está preparando.',
+      enDesc: 'Your order has been confirmed and is being prepared.',
       color: 'bg-blue-100 text-blue-800 border-blue-300',
     },
     in_transit: {
-      label: 'En Camino',
-      description: 'Tu paquete está en camino a su destino.',
+      es: 'En Camino',
+      en: 'In Transit',
+      esDesc: 'Tu paquete está en camino a su destino.',
+      enDesc: 'Your package is on its way to its destination.',
       color: 'bg-purple-100 text-purple-800 border-purple-300',
     },
     delivered: {
-      label: 'Entregado',
-      description: 'Tu paquete ha sido entregado exitosamente.',
+      es: 'Entregado',
+      en: 'Delivered',
+      esDesc: 'Tu paquete ha sido entregado exitosamente.',
+      enDesc: 'Your package has been successfully delivered.',
       color: 'bg-green-100 text-green-800 border-green-300',
     },
     picked_up: {
-      label: 'Recogido',
-      description: 'Tu paquete ha sido recogido de nuestra ubicación.',
+      es: 'Recogido',
+      en: 'Picked Up',
+      esDesc: 'Tu paquete ha sido recogido de nuestra ubicación.',
+      enDesc: 'Your package has been picked up from our location.',
       color: 'bg-green-100 text-green-800 border-green-300',
     },
     canceled: {
-      label: 'Cancelado',
-      description: 'Esta orden ha sido cancelada.',
+      es: 'Cancelado',
+      en: 'Canceled',
+      esDesc: 'Esta orden ha sido cancelada.',
+      enDesc: 'This order has been canceled.',
       color: 'bg-red-100 text-red-800 border-red-300',
     },
   };
 
-  return (
-    statusInfo[status] || {
-      label: 'Desconocido',
-      description: 'La información del estado no está disponible.',
+  const info = statusInfo[status];
+  if (!info) {
+    return {
+      label: isEn ? 'Unknown' : 'Desconocido',
+      description: isEn
+        ? 'Status information is not available.'
+        : 'La información del estado no está disponible.',
       color: 'bg-gray-100 text-gray-800 border-gray-300',
-    }
-  );
+    };
+  }
+
+  return {
+    label: isEn ? info.en : info.es,
+    description: isEn ? info.enDesc : info.esDesc,
+    color: info.color,
+  };
 }
