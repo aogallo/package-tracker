@@ -24,6 +24,9 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
       return NextResponse.json({ error: 'Invalid order ID' }, { status: 400 });
     }
 
+    // Read locale from cookie (NEXT_LOCALE set by next-intl middleware)
+    const locale = request.cookies.get('NEXT_LOCALE')?.value || 'es';
+
     // Get order to get tracking number for filename
     const order = await db.query.orders.findFirst({
       where: eq(orders.id, orderIdNum),
@@ -34,7 +37,7 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
     }
 
     // Generate PDF
-    const result = await generateTicket(orderIdNum);
+    const result = await generateTicket(orderIdNum, locale);
 
     if (!result.success || !result.pdfBuffer) {
       return NextResponse.json(
