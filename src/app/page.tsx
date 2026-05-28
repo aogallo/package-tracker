@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { Package, Truck, Search } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useTranslations } from 'next-intl';
+import { LocaleSwitcherMinimal } from '@/components/locale-switcher';
 
 export default function Home() {
   const t = useTranslations('landing');
@@ -87,6 +88,9 @@ export default function Home() {
         {/* Footer */}
         <div className="mt-16 pt-8 border-t border-gray-200 text-center text-gray-500">
           <p>{t('footer', { year: new Date().getFullYear() })}</p>
+          <div className="mt-3 flex items-center justify-center gap-4 text-xs">
+            <LocaleSwitcherMinimal />
+          </div>
         </div>
       </div>
     </div>
